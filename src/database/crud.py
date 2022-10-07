@@ -68,6 +68,9 @@ class food_item:
         db_food_item.name = item.name
         db_food_item.quantity = item.quantity
         db_food_item.unit = item.unit
+        db_food_item.storage_location = item.storage_location
+        db_food_item.date_added = item.date_added
+        db_food_item.use_by = item.use_by
 
         db.commit()
         db.refresh(db_food_item)

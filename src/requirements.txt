@@ -3,6 +3,7 @@ black
 coverage
 databases
 faker
+faker_enum
 fastapi
 firebase_admin
 flake8
