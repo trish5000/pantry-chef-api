@@ -8,7 +8,7 @@ fastapi
 firebase_admin
 flake8
 google-auth
-psycopg2-binary
+psycopg2
 pydantic
 pyjwt
 pytest
