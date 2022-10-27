@@ -1,7 +1,5 @@
-from decimal import Decimal
-import json
-from typing import List
 from faker import Faker
+from typing import List
 from fastapi import FastAPI
 import pytest
 import sqlalchemy as sa
@@ -9,16 +7,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from database import db
-from app.user.model import User
 import app.recipe.model as recipe_model
 import app.recipe.routers as recipe_routers
-
-
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Decimal):
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
+from test.fakes import (
+    fake_db_ingredient,
+    fake_db_recipe,
+    fake_json_recipe,
+    fake_db_user,
+)
 
 
 def assertEqualIngredients(
@@ -44,41 +40,19 @@ db.Base.metadata.create_all(bind=engine)
 
 @pytest.fixture()
 def global_data():
-    fake = Faker()
+    user_one = fake_db_user()
+    user_one.id = TOKEN_USER_ID
 
-    user_one = User(
-        id=TOKEN_USER_ID,
-        first_name=fake.first_name(),
-        last_name=fake.last_name(),
-        email=fake.email(),
-    )
-    user_two = User(
-        id=2,
-        first_name="tammy",
-        last_name="one",
-        email=fake.email(),
-    )
+    user_two = fake_db_user()
 
-    ingredient_one = recipe_model.Ingredient(
-        recipe_id=1,
-        name=fake.word(),
-        quantity=fake.pydecimal(),
-        unit=fake.word(),
-    )
+    ingredient_one = fake_db_ingredient()
+    ingredient_one.recipe_id = 1
 
-    ingredient_two = recipe_model.Ingredient(
-        recipe_id=1,
-        name=fake.word(),
-        quantity=fake.pydecimal(),
-        unit=fake.word(),
-    )
+    ingredient_two = fake_db_ingredient()
+    ingredient_two.recipe_id = 1
 
-    recipe_one = recipe_model.Recipe(
-        user_id=TOKEN_USER_ID,
-        name=fake.word(),
-        procedure=fake.paragraph(),
-        ingredients=[ingredient_one, ingredient_two],
-    )
+    recipe_one = fake_db_recipe()
+    recipe_one.user_id = TOKEN_USER_ID
 
     return {
         "user_one": user_one,
@@ -138,20 +112,7 @@ def test_add_recipe(test_client: TestClient):
         for i in range(len(new_ingredients)):
             assert new_ingredients[i] in returned_ingredients
 
-    fake = Faker()
-
-    def fake_ingredient():
-        return {
-            "name": fake.word(),
-            "quantity": fake.pyfloat(),
-            "unit": fake.word(),
-        }
-
-    new_recipe = {
-        "name": fake.word(),
-        "procedure": fake.paragraph(),
-        "ingredients": [fake_ingredient() for _ in range(fake.pyint(max_value=20))],
-    }
+    new_recipe = fake_json_recipe()
 
     response = test_client.post(f"/users/{TOKEN_USER_ID}/recipes", json=new_recipe)
     assert response.status_code == 200
