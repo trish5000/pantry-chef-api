@@ -1,3 +1,4 @@
+from re import X
 from faker import Faker
 from faker_enum import EnumProvider
 from fastapi import FastAPI
@@ -9,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from database import db
 from app.food_item.model import FoodItem
 from app.food_item.schema import StorageLocation
-from app.food_item import routers as food_item_routers
+import app.food_item.routers as food_item_routers
 from app.user.model import User
 
 TOKEN_USER_ID = 1
@@ -74,14 +75,7 @@ def session(global_data):
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
 
-    session.add_all(
-        [
-            global_data["user_one"],
-            global_data["user_two"],
-            global_data["food_item_one"],
-            global_data["food_item_two"],
-        ]
-    )
+    session.add_all([v for _, v in global_data.items()])
     session.commit()
 
     yield session
@@ -135,7 +129,7 @@ def test_get_food_items(test_client: TestClient, global_data):
     assert food_item_two["storage_location"] == global_item_two.storage_location.value
 
 
-def test_add_food_item(test_client: TestClient, global_data):
+def test_add_food_item(test_client: TestClient):
     fake = Faker()
     fake.add_provider(EnumProvider)
 
