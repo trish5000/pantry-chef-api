@@ -7,10 +7,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from database import db
-from app.food_item.model import FoodItem
-from app.food_item.schema import StorageLocation
-from app.food_item import routers as food_item_routers
-from app.user.model import User
+import app.food_item.routers as food_item_routers
+from test.fakes import fake_db_food_item, fake_db_user, fake_json_food_item
 
 TOKEN_USER_ID = 1
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -26,39 +24,17 @@ db.Base.metadata.create_all(bind=engine)
 
 @pytest.fixture()
 def global_data():
-    fake = Faker()
-    fake.add_provider(EnumProvider)
+    user_one = fake_db_user()
+    user_one.id = TOKEN_USER_ID
 
-    user_one = User(
-        id=TOKEN_USER_ID,
-        first_name=fake.first_name(),
-        last_name=fake.last_name(),
-        email=fake.email(),
-    )
-    user_two = User(
-        id=2,
-        first_name="tammy",
-        last_name="one",
-        email=fake.email(),
-    )
-    food_item_one = FoodItem(
-        name=fake.word(),
-        quantity=fake.pydecimal(),
-        unit=fake.word(),
-        date_added=fake.date_time(),
-        use_by=fake.date_time(),
-        storage_location=fake.enum(StorageLocation),
-        user_id=TOKEN_USER_ID,
-    )
-    food_item_two = FoodItem(
-        name=fake.word(),
-        quantity=fake.pydecimal(),
-        unit=fake.word(),
-        date_added=fake.date_time(),
-        use_by=fake.date_time(),
-        storage_location=fake.enum(StorageLocation),
-        user_id=TOKEN_USER_ID,
-    )
+    user_two = fake_db_user()
+
+    food_item_one = fake_db_food_item()
+    food_item_one.user_id = TOKEN_USER_ID
+
+    food_item_two = fake_db_food_item()
+    food_item_two.user_id = TOKEN_USER_ID
+
     return {
         "user_one": user_one,
         "user_two": user_two,
@@ -74,14 +50,7 @@ def session(global_data):
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
 
-    session.add_all(
-        [
-            global_data["user_one"],
-            global_data["user_two"],
-            global_data["food_item_one"],
-            global_data["food_item_two"],
-        ]
-    )
+    session.add_all([v for _, v in global_data.items()])
     session.commit()
 
     yield session
@@ -107,6 +76,7 @@ def test_get_food_items(test_client: TestClient, global_data):
     assert response.status_code == 200
 
     data = response.json()
+    print(data)
 
     food_item_one = data[0]
     global_item_one = global_data["food_item_one"]
@@ -135,19 +105,13 @@ def test_get_food_items(test_client: TestClient, global_data):
     assert food_item_two["storage_location"] == global_item_two.storage_location.value
 
 
-def test_add_food_item(test_client: TestClient, global_data):
+def test_add_food_item(test_client: TestClient):
     fake = Faker()
     fake.add_provider(EnumProvider)
 
-    new_food = {
-        "name": fake.word(),
-        "quantity": fake.pyint(),
-        "unit": fake.word(),
-        "user_id": TOKEN_USER_ID,
-        "date_added": fake.date_time().strftime("%Y-%m-%dT%H:%M:%S"),
-        "use_by": fake.date_time().strftime("%Y-%m-%dT%H:%M:%S"),
-        "storage_location": fake.enum(StorageLocation).value,
-    }
+    new_food = fake_json_food_item()
+    new_food["user_id"] = TOKEN_USER_ID
+
     response = test_client.post(f"/users/{TOKEN_USER_ID}/food_items", json=new_food)
     assert response.status_code == 200
 
