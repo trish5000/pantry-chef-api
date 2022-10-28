@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 
+from app.auth.routers import router as auth_router
 from app.food_item.routers import router as food_item_router
 from app.recipe.routers import router as recipe_router
 from app.recipe.schema import IngredientCreate, RecipeCreate
-from app.user.routers import router as user_router
+from app.user.routers import authenticated as user_router
 from app.user.schema import UserCreate
 from database import crud, db
 
@@ -15,6 +16,20 @@ def seed_test_data():
     existing = crud.user.get_all(session)
     if len(existing) > 0:
         return
+
+    michelle = UserCreate(
+        first_name="Michelle",
+        last_name="Tolfa",
+        email="michelle.tolfa@gmail.com",
+    )
+    db_michelle = crud.user.create(session, michelle)
+
+    alex = UserCreate(
+        first_name="Alex",
+        last_name="Cahoon",
+        email="cahoon.alex@gmail.com",
+    )
+    crud.user.create(session, alex)
 
     marlow = UserCreate(
         first_name="Marlow",
@@ -35,13 +50,14 @@ def seed_test_data():
     cereal = RecipeCreate(
         name="cereal", procedure="pour the milk", ingredients=[milk, froot_loops]
     )
-    crud.recipe.add(session, 1, cereal)
+    crud.recipe.add(session, db_michelle.id, cereal)
 
 
 app = FastAPI()
 
 seed_test_data()
 
+app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(food_item_router)
 app.include_router(recipe_router)
