@@ -6,8 +6,6 @@ from app.user.schema import User
 
 class AuthenticateRequest(BaseModel):
     token: str
-    first_name: Optional[str]
-    last_name: Optional[str]
 
 
 class AuthenticateResponse(BaseModel):

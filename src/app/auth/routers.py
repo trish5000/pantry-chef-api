@@ -41,10 +41,7 @@ async def spoof_user(
     session: Session = Depends(db.get_db),
     settings: Settings = Depends(get_settings),
 ):
-    print("HERE!")
     db_user = session.query(model.User).filter(model.User.id == user_id).first()
-
-    print(db_user)
 
     access_token_data: dict = {
         "sub": db_user.id,
