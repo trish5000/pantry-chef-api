@@ -19,6 +19,7 @@ services:
   db:
     image: postgres
     environment:
+      POSTGRES_DB: panda_express
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: newpassword
     ports:
