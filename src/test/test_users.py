@@ -4,9 +4,10 @@ import pytest
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
+from app.auth.routers import get_authenticated_user
 
 from database import db
-from app.user import routers as user_routers
+import app.user.routers as user_routers
 from test.fakes import fake_db_user, fake_json_user
 
 TOKEN_USER_ID = 1
@@ -55,8 +56,9 @@ def test_client(session):
         yield session
 
     app = FastAPI()
-    app.include_router(user_routers.router)
+    app.include_router(user_routers.authenticated)
     app.dependency_overrides[db.get_db] = override_get_db
+    app.dependency_overrides[get_authenticated_user] = lambda: None
     yield TestClient(app)
 
 

@@ -1,5 +1,6 @@
 from faker import Faker
 from faker_enum import EnumProvider
+from app.config import Settings
 from app.food_item.schema import StorageLocation
 
 import app.user.model as user_model
@@ -9,6 +10,33 @@ import app.recipe.schema as recipe_schema
 
 fake = Faker()
 fake.add_provider(EnumProvider)
+
+
+def fake_settings():
+    return Settings(
+        token_key="fakeKey",
+        oauth_android_client_id="fakeAndroidClient",
+        oauth_desktop_client_id="fakeDesktopClient",
+        oauth_ios_client_id="fakeIosClientId",
+    )
+
+
+def fake_auth_request():
+    return {"token": fake.word()}
+
+
+def fake_auth_response():
+    user = {
+        "first_name": fake.first_name(),
+        "last_name": fake.last_name(),
+        "email": fake.email(),
+        "id": fake.pyint(),
+    }
+    return {
+        "access_token": fake.word(),
+        "user": user,
+        "new_user": fake.pybool(),
+    }
 
 
 def fake_db_user():
