@@ -1,12 +1,14 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.food_item import model as food_item_model
-from app.food_item import schema as food_item_schema
-from app.recipe import model as recipe_model
-from app.recipe import schema as recipe_schema
-from app.user import model as user_model
-from app.user import schema as user_schema
+import app.food_item.model as food_item_model
+import app.food_item.schema as food_item_schema
+import app.recipe.model as recipe_model
+import app.recipe.schema as recipe_schema
+import app.user.model as user_model
+import app.user.schema as user_schema
+import app.household.schema as household_schema
+import app.household.model as household_model
 
 
 class user:
@@ -24,19 +26,117 @@ class user:
     @staticmethod
     def create(db: Session, user: user_schema.UserCreate):
         db_user = user_model.User(**user.dict())
+
         db.add(db_user)
         db.commit()
+        db_user.head_of_household_id = db_user.id
+
+        db.commit()
         db.refresh(db_user)
+
+        household.add_member(
+            db,
+            db_user.id,
+            household_schema.HouseholdMemberCreate(user_id=db_user.id),
+        )
         return db_user
 
     @staticmethod
     def update(db: Session, updated_user: user_schema.User):
-        db_user = user.get(db, updated_user.id)
+        db_user: user_model.User = user.get(db, updated_user.id)
         db_user.first_name = updated_user.first_name
         db_user.last_name = updated_user.last_name
+        db_user.head_of_household_id = updated_user.head_of_household_id
         db.commit()
         db.refresh(db_user)
         return db_user
+
+
+class household:
+    @staticmethod
+    def add_member(
+        db: Session,
+        user_id: int,
+        member: household_schema.HouseholdMemberCreate,
+    ):
+        diet_prefs = (
+            [] if member.dietary_preferences is None else member.dietary_preferences
+        )
+        db_user = user.get(db, user_id)
+
+        db_member = household_model.HouseholdMember(
+            head_of_household_id=db_user.head_of_household_id,
+            first_name=member.first_name,
+            last_name=member.last_name,
+            dietary_preferences=diet_prefs,
+            user_id=member.user_id,
+            child=member.child,
+        )
+        db.add(db_member)
+        db.commit()
+        db.refresh(db_member)
+        return db_member
+
+    @staticmethod
+    def get_all(db: Session, user_id: int):
+        db_user = user.get(db, user_id)
+        return (
+            db.query(household_model.HouseholdMember)
+            .filter(
+                household_model.HouseholdMember.head_of_household_id
+                == db_user.head_of_household_id
+            )
+            .all()
+        )
+
+    @staticmethod
+    def update(db: Session, member: household_schema.HouseholdMember):
+        db_member: household_model.HouseholdMember = (
+            db.query(household_model.HouseholdMember)
+            .filter(
+                household_model.HouseholdMember.id == member.id,
+            )
+            .first()
+        )
+
+        # If head of household changed, update in user table first
+        if (
+            db_member.user_id is not None
+            and member.head_of_household_id != db_member.head_of_household_id
+        ):
+            db_user = user.get(db, db_member.user_id)
+            user.update(
+                db,
+                user_schema.User(
+                    id=db_user.id,
+                    first_name=db_user.first_name,
+                    last_name=db_user.last_name,
+                    email=db_user.email,
+                    head_of_household_id=member.head_of_household_id,
+                ),
+            )
+            # user_schema.User(**db_user.dict()) probably can't do this
+
+        db_member.first_name = member.first_name
+        db_member.last_name = member.last_name
+        db_member.child = member.child
+        db_member.dietary_preferences = member.dietary_preferences
+        db_member.head_of_household_id = member.head_of_household_id
+        db_member.user_id = member.user_id
+
+        db.commit()
+        db.refresh(db_member)
+        return db_member
+
+    @staticmethod
+    def delete(db: Session, member: household_schema.HouseholdMember):
+        # TODO eventually - deleting a member or user will mess up people
+        # who had that person as head of household.
+        # need to have it automatically switch them back to themselves
+        db.query(household_model.HouseholdMember).filter(
+            household_model.HouseholdMember.id == member.id,
+        ).delete()
+        db.commit()
 
 
 class food_item:
@@ -122,6 +222,8 @@ class recipe:
             recipe_model.Ingredient(**e.dict()) for e in recipe.ingredients
         ]
 
+        # TODO? Do i need to filter by user ID AND recipe ID?
+        # aren't all recipe ids unique?
         db_recipe = (
             db.query(recipe_model.Recipe)
             .filter(

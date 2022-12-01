@@ -14,6 +14,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
+    head_of_household_id: int
 
     class Config:
         orm_mode = True
