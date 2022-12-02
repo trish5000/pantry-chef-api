@@ -8,7 +8,7 @@ from app.auth.routers import get_authenticated_user
 
 from database import db
 import app.user.routers as user_routers
-from test.fakes import fake_db_user, fake_json_user
+from test.fakes import MyFakes
 
 TOKEN_USER_ID = 1
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -22,11 +22,16 @@ db.Base.metadata.drop_all(bind=engine)
 db.Base.metadata.create_all(bind=engine)
 
 
+@pytest.fixture
+def my_fakes():
+    return MyFakes()
+
+
 @pytest.fixture()
-def global_data():
-    user_one = fake_db_user()
+def global_data(my_fakes: MyFakes):
+    user_one = my_fakes.fake_db_user()
     user_one.id = TOKEN_USER_ID
-    user_two = fake_db_user()
+    user_two = my_fakes.fake_db_user()
     return {
         "user_one": user_one,
         "user_two": user_two,
@@ -79,8 +84,8 @@ def test_get_users(test_client: TestClient, global_data):
     assert user_two["email"] == global_data["user_two"].email
 
 
-def test_add_user(test_client: TestClient):
-    new_user = fake_json_user()
+def test_add_user(test_client: TestClient, my_fakes: MyFakes):
+    new_user = my_fakes.fake_json_user()
 
     response = test_client.post("/users", json=new_user)
     assert response.status_code == 200

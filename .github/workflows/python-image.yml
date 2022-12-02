@@ -1,0 +1,35 @@
+name: Python Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    
+    container:
+      image: python:3.8
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+       pip install --upgrade pip
+       pip install -r src/requirements.txt
+    
+    - name: Lint check
+      run: flake8 . --extend-ignore=E203 --max-line-length=88
+    
+    - name: Formatting check
+      run: black --check src/
+
+    - name: Test
+      run: | 
+       coverage run -m pytest
+       coverage report --fail-under=75
+

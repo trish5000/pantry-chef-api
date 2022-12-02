@@ -9,12 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from database import db
 import app.recipe.model as recipe_model
 import app.recipe.routers as recipe_routers
-from test.fakes import (
-    fake_db_ingredient,
-    fake_db_recipe,
-    fake_json_recipe,
-    fake_db_user,
-)
+from test.fakes import MyFakes
 
 
 def assertEqualIngredients(
@@ -38,20 +33,25 @@ db.Base.metadata.drop_all(bind=engine)
 db.Base.metadata.create_all(bind=engine)
 
 
+@pytest.fixture
+def my_fakes():
+    return MyFakes()
+
+
 @pytest.fixture()
-def global_data():
-    user_one = fake_db_user()
+def global_data(my_fakes: MyFakes):
+    user_one = my_fakes.fake_db_user()
     user_one.id = TOKEN_USER_ID
 
-    user_two = fake_db_user()
+    user_two = my_fakes.fake_db_user()
 
-    ingredient_one = fake_db_ingredient()
+    ingredient_one = my_fakes.fake_db_ingredient()
     ingredient_one.recipe_id = 1
 
-    ingredient_two = fake_db_ingredient()
+    ingredient_two = my_fakes.fake_db_ingredient()
     ingredient_two.recipe_id = 1
 
-    recipe_one = fake_db_recipe()
+    recipe_one = my_fakes.fake_db_recipe()
     recipe_one.user_id = TOKEN_USER_ID
 
     return {
@@ -102,7 +102,7 @@ def test_get_recipe(test_client: TestClient, global_data):
     assertEqualIngredients(recipe_one["ingredients"], global_recipe_one.ingredients)
 
 
-def test_add_recipe(test_client: TestClient):
+def test_add_recipe(test_client: TestClient, my_fakes: MyFakes):
     def assertSameIngredients(new_ingredients, returned_ingredients):
         assert len(new_ingredients) == len(returned_ingredients)
 
@@ -112,7 +112,7 @@ def test_add_recipe(test_client: TestClient):
         for i in range(len(new_ingredients)):
             assert new_ingredients[i] in returned_ingredients
 
-    new_recipe = fake_json_recipe()
+    new_recipe = my_fakes.fake_json_recipe()
 
     response = test_client.post(f"/users/{TOKEN_USER_ID}/recipes", json=new_recipe)
     assert response.status_code == 200
@@ -155,8 +155,10 @@ def test_delete_recipe(test_client: TestClient):
     initial_recipe_count = len(data)
     item_to_delete = data[0]
 
-    response = test_client.delete(
-        f"/users/{TOKEN_USER_ID}/recipes", json=item_to_delete
+    response = test_client.request(
+        "DELETE",
+        f"/users/{TOKEN_USER_ID}/recipes",
+        json=item_to_delete,
     )
     assert response.status_code == 200
 

@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from database import db
 import app.food_item.routers as food_item_routers
-from test.fakes import fake_db_food_item, fake_db_user, fake_json_food_item
+from test.fakes import MyFakes
 
 TOKEN_USER_ID = 1
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -22,17 +22,22 @@ db.Base.metadata.drop_all(bind=engine)
 db.Base.metadata.create_all(bind=engine)
 
 
+@pytest.fixture
+def my_fakes():
+    return MyFakes()
+
+
 @pytest.fixture()
-def global_data():
-    user_one = fake_db_user()
+def global_data(my_fakes: MyFakes):
+    user_one = my_fakes.fake_db_user()
     user_one.id = TOKEN_USER_ID
 
-    user_two = fake_db_user()
+    user_two = my_fakes.fake_db_user()
 
-    food_item_one = fake_db_food_item()
+    food_item_one = my_fakes.fake_db_food_item()
     food_item_one.user_id = TOKEN_USER_ID
 
-    food_item_two = fake_db_food_item()
+    food_item_two = my_fakes.fake_db_food_item()
     food_item_two.user_id = TOKEN_USER_ID
 
     return {
@@ -105,11 +110,11 @@ def test_get_food_items(test_client: TestClient, global_data):
     assert food_item_two["storage_location"] == global_item_two.storage_location.value
 
 
-def test_add_food_item(test_client: TestClient):
+def test_add_food_item(test_client: TestClient, my_fakes: MyFakes):
     fake = Faker()
     fake.add_provider(EnumProvider)
 
-    new_food = fake_json_food_item()
+    new_food = my_fakes.fake_json_food_item()
     new_food["user_id"] = TOKEN_USER_ID
 
     response = test_client.post(f"/users/{TOKEN_USER_ID}/food_items", json=new_food)
@@ -155,8 +160,10 @@ def test_delete_food_item(test_client: TestClient):
     initial_food_count = len(data)
     item_to_delete = data[1]
 
-    response = test_client.delete(
-        f"/users/{TOKEN_USER_ID}/food_items", json=item_to_delete
+    response = test_client.request(
+        "DELETE",
+        f"/users/{TOKEN_USER_ID}/food_items",
+        json=item_to_delete,
     )
     assert response.status_code == 200
 
