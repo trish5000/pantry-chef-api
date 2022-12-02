@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Python Pipeline
 
 on:
   push:
@@ -17,5 +17,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Test with pytest
-      run: python --version
+    - name: Install dependencies
+      run: |
+       pip install --upgrade pip
+       pip install -r src/requirements.txt
+    
+    - name: Lint check
+      run: flake8 . --extend-ignore=E203 --max-line-length=88
+    
+    - name: Formatting check
+      run: black --check src/
+
