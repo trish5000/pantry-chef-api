@@ -23,6 +23,7 @@ class HouseholdMemberCreate(HouseholdMemberBase):
     child: Optional[bool]
 
 
+# TODO change first name last name to mandatory
 class HouseholdMember(HouseholdMemberBase):
     id: int
     head_of_household_id: int

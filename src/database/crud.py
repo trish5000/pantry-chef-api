@@ -80,7 +80,10 @@ class household:
     @staticmethod
     def get_all(db: Session, user_id: int):
         db_user = user.get(db, user_id)
-        return (
+        db_users = db.query(user_model.User).filter(
+            user_model.User.head_of_household_id == db_user.head_of_household_id
+        )
+        db_members = (
             db.query(household_model.HouseholdMember)
             .filter(
                 household_model.HouseholdMember.head_of_household_id
@@ -88,6 +91,14 @@ class household:
             )
             .all()
         )
+        for member in db_members:
+            if member.user_id is not None:
+                u: user_model.User = db_users.filter(
+                    user_model.User.id == member.user_id
+                ).first()
+                member.first_name = u.first_name
+                member.last_name = u.last_name
+        return db_members
 
     @staticmethod
     def update(db: Session, member: household_schema.HouseholdMember):
