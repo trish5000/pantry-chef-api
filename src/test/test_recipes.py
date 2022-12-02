@@ -155,8 +155,10 @@ def test_delete_recipe(test_client: TestClient):
     initial_recipe_count = len(data)
     item_to_delete = data[0]
 
-    response = test_client.delete(
-        f"/users/{TOKEN_USER_ID}/recipes", json=item_to_delete
+    response = test_client.request(
+        "DELETE",
+        f"/users/{TOKEN_USER_ID}/recipes",
+        json=item_to_delete,
     )
     assert response.status_code == 200
 
