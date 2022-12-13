@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
+from app.auth.routers import get_authenticated_user
 from .schema import FoodItem, FoodItemCreate
 from database import crud, db
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_authenticated_user)])
 
 
 @router.post("/users/{user_id}/food_items", response_model=FoodItem)

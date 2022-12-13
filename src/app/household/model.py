@@ -36,4 +36,5 @@ class HouseholdMember(Base):
                 native_enum=False,
             ),
         ),
+        default=[DietaryPreferences.NONE],
     )

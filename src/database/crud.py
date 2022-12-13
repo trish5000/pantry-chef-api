@@ -59,16 +59,13 @@ class household:
         user_id: int,
         member: household_schema.HouseholdMemberCreate,
     ):
-        diet_prefs = (
-            [] if member.dietary_preferences is None else member.dietary_preferences
-        )
         db_user = user.get(db, user_id)
 
         db_member = household_model.HouseholdMember(
             head_of_household_id=db_user.head_of_household_id,
             first_name=member.first_name,
             last_name=member.last_name,
-            dietary_preferences=diet_prefs,
+            dietary_preferences=member.dietary_preferences,
             user_id=member.user_id,
             child=member.child,
         )

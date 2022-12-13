@@ -5,7 +5,7 @@ from app.food_item.routers import router as food_item_router
 from app.household.routers import router as household_router
 from app.recipe.routers import router as recipe_router
 from app.recipe.schema import IngredientCreate, RecipeCreate
-from app.user.routers import authenticated as user_router
+from app.user.routers import router as user_router
 from app.user.schema import UserCreate
 from database import crud, db
 
