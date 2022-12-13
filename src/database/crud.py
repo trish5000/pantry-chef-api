@@ -26,18 +26,15 @@ class user:
     @staticmethod
     def create(db: Session, user: user_schema.UserCreate):
         db_user = user_model.User(**user.dict())
-
         db.add(db_user)
-        db.commit()
-        db_user.head_of_household_id = db_user.id
-
         db.commit()
         db.refresh(db_user)
 
+        new_member = household_schema.HouseholdMemberCreate(user_id=db_user.id)
         household.add_member(
             db,
             db_user.id,
-            household_schema.HouseholdMemberCreate(user_id=db_user.id),
+            new_member,
         )
         return db_user
 
@@ -56,19 +53,18 @@ class household:
     @staticmethod
     def add_member(
         db: Session,
-        user_id: int,
+        head_of_household_id: int,
         member: household_schema.HouseholdMemberCreate,
     ):
-        db_user = user.get(db, user_id)
-
         db_member = household_model.HouseholdMember(
-            head_of_household_id=db_user.head_of_household_id,
+            head_of_household_id=head_of_household_id,
             first_name=member.first_name,
             last_name=member.last_name,
-            dietary_preferences=member.dietary_preferences,
             user_id=member.user_id,
             child=member.child,
+            dietary_preferences=member.dietary_preferences,
         )
+
         db.add(db_member)
         db.commit()
         db.refresh(db_member)
@@ -76,23 +72,26 @@ class household:
 
     @staticmethod
     def get_all(db: Session, user_id: int):
-        db_user = user.get(db, user_id)
-        db_users = db.query(user_model.User).filter(
-            user_model.User.head_of_household_id == db_user.head_of_household_id
+        db_member = (
+            db.query(household_model.HouseholdMember)
+            .filter(household_model.HouseholdMember.user_id == user_id)
+            .first()
         )
         db_members = (
             db.query(household_model.HouseholdMember)
             .filter(
                 household_model.HouseholdMember.head_of_household_id
-                == db_user.head_of_household_id
+                == db_member.head_of_household_id
             )
             .all()
         )
         for member in db_members:
             if member.user_id is not None:
-                u: user_model.User = db_users.filter(
-                    user_model.User.id == member.user_id
-                ).first()
+                u: user_model.User = (
+                    db.query(user_model.User)
+                    .filter(user_model.User.id == member.user_id)
+                    .first()
+                )
                 member.first_name = u.first_name
                 member.last_name = u.last_name
         return db_members
@@ -107,24 +106,6 @@ class household:
             .first()
         )
 
-        # If head of household changed, update in user table first
-        if (
-            db_member.user_id is not None
-            and member.head_of_household_id != db_member.head_of_household_id
-        ):
-            db_user = user.get(db, db_member.user_id)
-            user.update(
-                db,
-                user_schema.User(
-                    id=db_user.id,
-                    first_name=db_user.first_name,
-                    last_name=db_user.last_name,
-                    email=db_user.email,
-                    head_of_household_id=member.head_of_household_id,
-                ),
-            )
-            # user_schema.User(**db_user.dict()) probably can't do this
-
         db_member.first_name = member.first_name
         db_member.last_name = member.last_name
         db_member.child = member.child
@@ -137,14 +118,22 @@ class household:
         return db_member
 
     @staticmethod
-    def delete(db: Session, member: household_schema.HouseholdMember):
-        # TODO eventually - deleting a member or user will mess up people
-        # who had that person as head of household.
-        # need to have it automatically switch them back to themselves
-        db.query(household_model.HouseholdMember).filter(
-            household_model.HouseholdMember.id == member.id,
-        ).delete()
-        db.commit()
+    def remove_from_household(
+        db: Session,
+        member: household_schema.HouseholdMember,
+    ):
+        """
+        Member must not be head of own household.  This is only for deleting
+        sub-members from your household.
+        """
+        if member.user_id is None:
+            db.query(household_model.HouseholdMember).filter(
+                household_model.HouseholdMember.id == member.id,
+            ).delete()
+            db.commit()
+        else:
+            member.head_of_household_id = member.user_id
+            household.update(db, member)
 
 
 class food_item:

@@ -81,7 +81,6 @@ def test_get_food_items(test_client: TestClient, global_data):
     assert response.status_code == 200
 
     data = response.json()
-    print(data)
 
     food_item_one = data[0]
     global_item_one = global_data["food_item_one"]
