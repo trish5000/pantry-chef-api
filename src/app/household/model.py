@@ -4,11 +4,23 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Boolean,
-    ARRAY,
     String,
 )
+from sqlalchemy.orm import relationship
 from database.db import Base
-from .schema import DietaryPreferences
+from .schema import DietaryPreferenceEnum
+
+
+class DietaryPreferences(Base):
+    __tablename__ = "dietary_preferences"
+
+    id = Column(Integer, primary_key=True)
+    member_id = Column(ForeignKey("household_members.id"))
+    preference = Column(
+        Enum(DietaryPreferenceEnum),
+        default=DietaryPreferenceEnum.NONE,
+        nullable=False,
+    )
 
 
 class HouseholdMember(Base):
@@ -28,13 +40,4 @@ class HouseholdMember(Base):
         nullable=False,
     )
     child = Column(Boolean, default=False)
-    dietary_preferences = Column(
-        ARRAY(
-            Enum(
-                DietaryPreferences,
-                create_constraint=False,
-                native_enum=False,
-            ),
-        ),
-        default=[DietaryPreferences.NONE],
-    )
+    dietary_preferences = relationship(DietaryPreferences, lazy="joined")

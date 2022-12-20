@@ -30,7 +30,10 @@ class user:
         db.commit()
         db.refresh(db_user)
 
-        new_member = household_schema.HouseholdMemberCreate(user_id=db_user.id)
+        new_member = household_schema.HouseholdMemberCreate(
+            user_id=db_user.id,
+            dietary_preferences=[household_schema.DietaryPreferenceCreate()],
+        )
         household.add_member(
             db,
             db_user.id,
@@ -43,7 +46,6 @@ class user:
         db_user: user_model.User = user.get(db, updated_user.id)
         db_user.first_name = updated_user.first_name
         db_user.last_name = updated_user.last_name
-        db_user.head_of_household_id = updated_user.head_of_household_id
         db.commit()
         db.refresh(db_user)
         return db_user
@@ -56,13 +58,21 @@ class household:
         head_of_household_id: int,
         member: household_schema.HouseholdMemberCreate,
     ):
+        if member.dietary_preferences is None:
+            member.dietary_preferences = []
+
+        diet_prefs = [
+            household_model.DietaryPreferences(**e.dict())
+            for e in member.dietary_preferences
+        ]
+
         db_member = household_model.HouseholdMember(
             head_of_household_id=head_of_household_id,
             first_name=member.first_name,
             last_name=member.last_name,
             user_id=member.user_id,
             child=member.child,
-            dietary_preferences=member.dietary_preferences,
+            dietary_preferences=diet_prefs,
         )
 
         db.add(db_member)
@@ -106,10 +116,19 @@ class household:
             .first()
         )
 
+        db.query(household_model.DietaryPreferences).filter(
+            household_model.DietaryPreferences.member_id == member.id
+        ).delete()
+
+        diet_prefs = [
+            household_model.DietaryPreferences(**e.dict())
+            for e in member.dietary_preferences
+        ]
+
         db_member.first_name = member.first_name
         db_member.last_name = member.last_name
         db_member.child = member.child
-        db_member.dietary_preferences = member.dietary_preferences
+        db_member.dietary_preferences = diet_prefs
         db_member.head_of_household_id = member.head_of_household_id
         db_member.user_id = member.user_id
 
@@ -127,6 +146,9 @@ class household:
         sub-members from your household.
         """
         if member.user_id is None:
+            db.query(household_model.DietaryPreferences).filter(
+                household_model.DietaryPreferences.member_id == member.id
+            ).delete()
             db.query(household_model.HouseholdMember).filter(
                 household_model.HouseholdMember.id == member.id,
             ).delete()
