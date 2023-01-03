@@ -7,6 +7,8 @@ import app.user.model as user_model
 import app.food_item.model as food_item_model
 import app.recipe.model as recipe_model
 import app.recipe.schema as recipe_schema
+import app.household.model as household_model
+import app.household.schema as household_schema
 
 fake = Faker()
 fake.add_provider(EnumProvider)
@@ -58,6 +60,30 @@ class MyFakes:
             "last_name": fake.last_name(),
             "email": fake.email(),
         }
+
+    def fake_db_household_member(
+        self,
+        head_of_household_id: int,
+        user_id: int = None,
+    ):
+        return household_model.HouseholdMember(
+            user_id=user_id,
+            first_name=fake.first_name(),
+            head_of_household_id=head_of_household_id,
+        )
+
+    def fake_json_household_member(self):
+        return {
+            "first_name": fake.first_name(),
+            "last_name": fake.last_name(),
+            "child": fake.pybool(),
+        }
+
+    def fake_diet_pref(self, member_id: int):
+        return household_model.DietaryPreferences(
+            member_id=member_id,
+            preference=fake.enum(household_schema.DietaryPreferenceEnum),
+        )
 
     def fake_db_food_item(self):
         self.user_id += 1

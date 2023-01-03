@@ -61,9 +61,9 @@ def test_client(session):
         yield session
 
     app = FastAPI()
-    app.include_router(user_routers.authenticated)
+    app.include_router(user_routers.router)
     app.dependency_overrides[db.get_db] = override_get_db
-    app.dependency_overrides[get_authenticated_user] = lambda: None
+    app.dependency_overrides[get_authenticated_user] = lambda: {"sub": TOKEN_USER_ID}
     yield TestClient(app)
 
 

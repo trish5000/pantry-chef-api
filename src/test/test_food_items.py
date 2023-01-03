@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from database import db
+from app.auth.routers import get_authenticated_user
 import app.food_item.routers as food_item_routers
 from test.fakes import MyFakes
 
@@ -73,6 +74,7 @@ def test_client(session):
     app = FastAPI()
     app.include_router(food_item_routers.router)
     app.dependency_overrides[db.get_db] = override_get_db
+    app.dependency_overrides[get_authenticated_user] = lambda: {"sub": TOKEN_USER_ID}
     yield TestClient(app)
 
 
@@ -81,7 +83,6 @@ def test_get_food_items(test_client: TestClient, global_data):
     assert response.status_code == 200
 
     data = response.json()
-    print(data)
 
     food_item_one = data[0]
     global_item_one = global_data["food_item_one"]
