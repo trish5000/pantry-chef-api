@@ -6,11 +6,10 @@ from pydantic import BaseModel
 
 
 class DietaryPreferenceEnum(Enum):
-    NONE = 0
-    VEGETARIAN = 1
-    PESCATARIAN = 2
-    VEGAN = 3
-    GLUTEN_FREE = 4
+    VEGETARIAN = 0
+    PESCATARIAN = 1
+    VEGAN = 2
+    GLUTEN_FREE = 3
 
 
 class DietaryPreferenceBase(BaseModel):

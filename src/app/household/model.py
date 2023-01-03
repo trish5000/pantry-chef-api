@@ -16,11 +16,7 @@ class DietaryPreferences(Base):
 
     id = Column(Integer, primary_key=True)
     member_id = Column(ForeignKey("household_members.id"))
-    preference = Column(
-        Enum(DietaryPreferenceEnum),
-        default=DietaryPreferenceEnum.NONE,
-        nullable=False,
-    )
+    preference = Column(Enum(DietaryPreferenceEnum))
 
 
 class HouseholdMember(Base):
