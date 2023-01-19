@@ -22,6 +22,7 @@ class Ingredient(IngredientBase):
 
 class RecipeBase(BaseModel):
     name: str
+    servings: float
     procedure: Optional[str]
 
 

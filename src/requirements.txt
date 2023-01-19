@@ -14,7 +14,7 @@ pydantic
 pyjwt
 pytest
 requests
-sqlalchemy
+sqlalchemy==1.4.46
 typing
 uuid
 uvicorn

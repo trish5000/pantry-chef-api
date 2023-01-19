@@ -135,6 +135,7 @@ class MyFakes:
             user_id=self.user_id,
             name=fake.word(),
             procedure=fake.paragraph(),
+            servings=fake.pyfloat(),
             ingredients=[
                 self.fake_db_ingredient() for _ in range(fake.pyint(max_value=20))
             ],
@@ -154,4 +155,5 @@ class MyFakes:
             "ingredients": [
                 self.fake_json_ingredient() for _ in range(fake.pyint(max_value=20))
             ],
+            "servings": fake.pyfloat(),
         }

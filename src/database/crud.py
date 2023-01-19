@@ -32,7 +32,6 @@ class user:
 
         new_member = household_schema.HouseholdMemberCreate(
             user_id=db_user.id,
-            dietary_preferences=[household_schema.DietaryPreferenceCreate()],
         )
         household.add_member(
             db,
@@ -104,6 +103,7 @@ class household:
                 )
                 member.first_name = u.first_name
                 member.last_name = u.last_name
+
         return db_members
 
     @staticmethod
@@ -215,6 +215,7 @@ class recipe:
         db_recipe = recipe_model.Recipe(
             user_id=user_id,
             name=recipe.name,
+            servings=recipe.servings,
             ingredients=db_ingredients,
             procedure=recipe.procedure,
         )
@@ -252,6 +253,7 @@ class recipe:
             .first()
         )
         db_recipe.name = recipe.name
+        db_recipe.servings = recipe.servings
         db_recipe.ingredients = db_ingredients
         db_recipe.procedure = recipe.procedure
 
