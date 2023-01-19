@@ -42,7 +42,10 @@ def seed_test_data():
     milk = IngredientCreate(name="milk", quantity=1, unit="liter")
     froot_loops = IngredientCreate(name="froot loops", quantity=2, unit="cups")
     cereal = RecipeCreate(
-        name="cereal", procedure="pour the milk", ingredients=[milk, froot_loops]
+        name="cereal",
+        procedure="pour the milk",
+        ingredients=[milk, froot_loops],
+        servings=4,
     )
     crud.recipe.add(session, db_michelle.id, cereal)
 

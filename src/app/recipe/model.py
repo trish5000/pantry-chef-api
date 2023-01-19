@@ -20,6 +20,7 @@ class Recipe(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     name = Column(String)
+    servings = Column(Float)
     procedure = Column(Text, nullable=True)
     timestamp = Column(
         DateTime(timezone=False), server_default=text("CURRENT_TIMESTAMP")
