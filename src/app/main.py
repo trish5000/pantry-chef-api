@@ -5,6 +5,7 @@ from app.pantry.routers import router as pantry_router
 from app.household.routers import router as household_router
 from app.recipe.routers import router as recipe_router
 from app.recipe.schema import IngredientCreate, RecipeCreate
+from app.suggestions.routers import router as suggestion_router
 from app.user.routers import router as user_router
 from app.user.schema import UserCreate
 from database import crud, db
@@ -59,3 +60,4 @@ app.include_router(user_router)
 app.include_router(pantry_router)
 app.include_router(recipe_router)
 app.include_router(household_router)
+app.include_router(suggestion_router)

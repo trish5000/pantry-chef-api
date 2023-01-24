@@ -2,10 +2,10 @@ from copy import deepcopy
 from typing import List
 from sqlalchemy.orm import Session
 
-import app.food_item.model as food_item_model
+import app.pantry.model as pantry_model
 import app.household.model as household_model
-import app.recipe.schema as recipe_schema
 import app.recipe.model as recipe_model
+import app.suggestions.schema as suggestion_schema
 
 
 class recipe:
@@ -18,9 +18,9 @@ class recipe:
             .all()
         )
 
-        pantry: List[food_item_model.FoodItem] = (
-            db.query(food_item_model.FoodItem)
-            .filter(food_item_model.FoodItem.user_id == user_id)
+        pantry: List[pantry_model.PantryItem] = (
+            db.query(pantry_model.PantryItem)
+            .filter(pantry_model.PantryItem.user_id == user_id)
             .all()
         )
 
@@ -38,7 +38,7 @@ class recipe:
             )
             .count()
         )
-        suggestions: List[recipe_schema.RecipeSuggestion] = []
+        suggestions: List[suggestion_schema.RecipeSuggestion] = []
 
         for rcp in recipes:
             factor = num_to_serve / rcp.servings if rcp.servings < num_to_serve else 1.0
@@ -58,7 +58,7 @@ class recipe:
                             ingredient.quantity = ingredient.quantity - item.quantity
                         break
 
-            suggestion = recipe_schema.RecipeSuggestion(
+            suggestion = suggestion_schema.RecipeSuggestion(
                 recipe=rcp,
                 missing_ingredients=missing_ingredients,
             )

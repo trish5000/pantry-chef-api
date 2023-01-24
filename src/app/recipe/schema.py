@@ -39,8 +39,3 @@ class Recipe(RecipeBase):
 
     class Config:
         orm_mode = True
-
-
-class RecipeSuggestion(BaseModel):
-    missing_ingredients: List[Ingredient]
-    recipe: Recipe
