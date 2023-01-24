@@ -43,6 +43,7 @@ class recipe:
         for rcp in recipes:
             factor = num_to_serve / rcp.servings if rcp.servings < num_to_serve else 1.0
 
+            pantry_items: List[pantry_model.PantryItem] = []
             missing_ingredients: List[recipe_model.Ingredient] = deepcopy(
                 rcp.ingredients
             )
@@ -54,13 +55,18 @@ class recipe:
                     if item.name.lower() == ingredient.name.lower():
                         if item.quantity >= ingredient.quantity:
                             missing_ingredients.remove(ingredient)
+                            used_item = deepcopy(item)
+                            used_item.quantity = ingredient.quantity
+                            pantry_items.append(used_item)
                         else:
                             ingredient.quantity = ingredient.quantity - item.quantity
+                            pantry_items.append(item)
                         break
 
             suggestion = suggestion_schema.RecipeSuggestion(
                 recipe=rcp,
                 missing_ingredients=missing_ingredients,
+                pantry_items=pantry_items,
             )
             suggestions.append(suggestion)
 
