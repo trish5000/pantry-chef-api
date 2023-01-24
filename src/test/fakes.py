@@ -1,12 +1,12 @@
 from faker import Faker
 from faker_enum import EnumProvider
-from app.config import Settings
-from app.food_item.schema import StorageLocation
 
-import app.user.model as user_model
-import app.food_item.model as food_item_model
+from app.config import Settings
+from app.pantry.schema import StorageLocation
+import app.pantry.model as pantry_model
 import app.recipe.model as recipe_model
 import app.recipe.schema as recipe_schema
+import app.user.model as user_model
 import app.household.model as household_model
 import app.household.schema as household_schema
 
@@ -85,10 +85,10 @@ class MyFakes:
             preference=fake.enum(household_schema.DietaryPreferenceEnum),
         )
 
-    def fake_db_food_item(self):
+    def fake_db_pantry_item(self):
         self.user_id += 1
 
-        return food_item_model.FoodItem(
+        return pantry_model.PantryItem(
             name=fake.word(),
             quantity=fake.pydecimal(),
             unit=fake.word(),
@@ -98,7 +98,7 @@ class MyFakes:
             user_id=self.user_id,
         )
 
-    def fake_json_food_item(self):
+    def fake_json_pantry_item(self):
         self.user_id += 1
 
         return {

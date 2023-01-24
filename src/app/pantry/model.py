@@ -1,11 +1,11 @@
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, text
-from app.food_item.schema import StorageLocation
+from app.pantry.schema import StorageLocation
 
 from database.db import Base
 
 
-class FoodItem(Base):
-    __tablename__ = "food_items"
+class PantryItem(Base):
+    __tablename__ = "pantry_items"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)

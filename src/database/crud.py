@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-import app.food_item.model as food_item_model
-import app.food_item.schema as food_item_schema
+import app.pantry.model as pantry_model
+import app.pantry.schema as pantry_schema
 import app.recipe.model as recipe_model
 import app.recipe.schema as recipe_schema
 import app.user.model as user_model
@@ -158,50 +158,50 @@ class household:
             household.update(db, member)
 
 
-class food_item:
+class pantry:
     @staticmethod
-    def add(db: Session, user_id: int, food_item: food_item_schema.FoodItemCreate):
-        db_food_item = food_item_model.FoodItem(**food_item.dict())
-        db_food_item.user_id = user_id
-        db.add(db_food_item)
+    def add(db: Session, user_id: int, pantry_item: pantry_schema.PantryItemCreate):
+        db_pantry_item = pantry_model.PantryItem(**pantry_item.dict())
+        db_pantry_item.user_id = user_id
+        db.add(db_pantry_item)
         db.commit()
-        db.refresh(db_food_item)
-        return db_food_item
+        db.refresh(db_pantry_item)
+        return db_pantry_item
 
     @staticmethod
     def get_all(db: Session, user_id: int):
         return (
-            db.query(food_item_model.FoodItem)
-            .filter(food_item_model.FoodItem.user_id == user_id)
+            db.query(pantry_model.PantryItem)
+            .filter(pantry_model.PantryItem.user_id == user_id)
             .all()
         )
 
     @staticmethod
-    def update(db: Session, user_id: int, item: food_item_schema.FoodItem):
-        db_food_item = (
-            db.query(food_item_model.FoodItem)
+    def update(db: Session, user_id: int, item: pantry_schema.PantryItem):
+        db_pantry_item = (
+            db.query(pantry_model.PantryItem)
             .filter(
-                food_item_model.FoodItem.user_id == user_id,
-                food_item_model.FoodItem.id == item.id,
+                pantry_model.PantryItem.user_id == user_id,
+                pantry_model.PantryItem.id == item.id,
             )
             .first()
         )
-        db_food_item.name = item.name
-        db_food_item.quantity = item.quantity
-        db_food_item.unit = item.unit
-        db_food_item.storage_location = item.storage_location
-        db_food_item.date_added = item.date_added
-        db_food_item.use_by = item.use_by
+        db_pantry_item.name = item.name
+        db_pantry_item.quantity = item.quantity
+        db_pantry_item.unit = item.unit
+        db_pantry_item.storage_location = item.storage_location
+        db_pantry_item.date_added = item.date_added
+        db_pantry_item.use_by = item.use_by
 
         db.commit()
-        db.refresh(db_food_item)
-        return db_food_item
+        db.refresh(db_pantry_item)
+        return db_pantry_item
 
     @staticmethod
-    def delete(db: Session, user_id: int, item: food_item_schema.FoodItem):
-        db.query(food_item_model.FoodItem).filter(
-            food_item_model.FoodItem.user_id == user_id,
-            food_item_model.FoodItem.name == item.name,
+    def delete(db: Session, user_id: int, item: pantry_schema.PantryItem):
+        db.query(pantry_model.PantryItem).filter(
+            pantry_model.PantryItem.user_id == user_id,
+            pantry_model.PantryItem.name == item.name,
         ).delete()
         db.commit()
 
