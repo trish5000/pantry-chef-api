@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.auth.routers import get_authenticated_user
-from .schema import Recipe, RecipeCreate
-from database import crud, db
+from .schema import Recipe, RecipeCreate, RecipeSuggestion
+from database import crud, db, views
 
 router = APIRouter(dependencies=[Depends(get_authenticated_user)])
 
@@ -42,3 +42,14 @@ async def delete_recipe(
     db: Session = Depends(db.get_db),
 ):
     crud.recipe.delete(db, user_id, recipe)
+
+
+@router.get(
+    "/users/{user_id}/recipes/suggestions",
+    response_model=List[RecipeSuggestion],
+)
+async def get_recipe_suggestions(
+    user_id: int,
+    db: Session = Depends(db.get_db),
+):
+    return views.recipe.get_suggestions(db, user_id)
