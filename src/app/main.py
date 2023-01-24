@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.auth.routers import router as auth_router
-from app.food_item.routers import router as food_item_router
+from app.pantry.routers import router as pantry_router
 from app.household.routers import router as household_router
 from app.recipe.routers import router as recipe_router
 from app.recipe.schema import IngredientCreate, RecipeCreate
@@ -56,6 +56,6 @@ seed_test_data()
 
 app.include_router(auth_router)
 app.include_router(user_router)
-app.include_router(food_item_router)
+app.include_router(pantry_router)
 app.include_router(recipe_router)
 app.include_router(household_router)

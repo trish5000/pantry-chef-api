@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel
+
+from app.food.schema import FoodItem
 
 
 class StorageLocation(Enum):
@@ -10,8 +11,7 @@ class StorageLocation(Enum):
     SPICE_RACK = 3
 
 
-class FoodItemBase(BaseModel):
-    name: str
+class PantryItemBase(FoodItem):
     quantity: float
     unit: str
     storage_location: StorageLocation
@@ -19,11 +19,11 @@ class FoodItemBase(BaseModel):
     use_by: datetime
 
 
-class FoodItemCreate(FoodItemBase):
+class PantryItemCreate(PantryItemBase):
     pass
 
 
-class FoodItem(FoodItemBase):
+class PantryItem(PantryItemBase):
     id: int
     user_id: int
     timestamp: datetime
