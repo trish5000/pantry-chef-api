@@ -10,7 +10,11 @@ import app.suggestions.schema as suggestion_schema
 
 class recipe:
     @staticmethod
-    def get_suggestions(db: Session, user_id: int):
+    def get_suggestions(
+        db: Session,
+        user_id: int,
+        filters: suggestion_schema.SuggestionFilters,
+    ):
         # TODO use Crud methods instead?
         recipes: List[recipe_model.Recipe] = (
             db.query(recipe_model.Recipe)
@@ -24,20 +28,25 @@ class recipe:
             .all()
         )
 
-        household_member: household_model.HouseholdMember = (
-            db.query(household_model.HouseholdMember)
-            .filter(household_model.HouseholdMember.user_id == user_id)
-            .first()
-        )
-
-        num_to_serve: int = (
-            db.query(household_model.HouseholdMember)
-            .filter(
-                household_model.HouseholdMember.head_of_household_id
-                == household_member.head_of_household_id
+        num_to_serve: int
+        if filters.servings:
+            num_to_serve = filters.servings
+        else:
+            household_member: household_model.HouseholdMember = (
+                db.query(household_model.HouseholdMember)
+                .filter(household_model.HouseholdMember.user_id == user_id)
+                .first()
             )
-            .count()
-        )
+
+            num_to_serve = (
+                db.query(household_model.HouseholdMember)
+                .filter(
+                    household_model.HouseholdMember.head_of_household_id
+                    == household_member.head_of_household_id
+                )
+                .count()
+            )
+
         suggestions: List[suggestion_schema.RecipeSuggestion] = []
 
         for rcp in recipes:
